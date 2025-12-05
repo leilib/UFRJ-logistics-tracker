@@ -1,7 +1,7 @@
 // oauth.js
 const CLIENT_ID = "4602042605636246";
 const REDIRECT_URI = "https://leilib.github.io/callback";
-const AUTH_URL = "https://auth.mercadolibre.com.br/authorization";
+const AUTH_URL = "https://auth.mercadolivre.com.br/authorization";
 
 function base64url(buffer) {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)))
