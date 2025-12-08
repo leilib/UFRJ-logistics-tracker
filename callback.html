@@ -7,37 +7,30 @@
   <script type="module">
     const CLIENT_ID = "4602042605636246";
     const REDIRECT_URI = "https://leilib.github.io/UFRJ-logistics-tracker/callback";
-    const TOKEN_URL = "https://api.mercadolivre.com/oauth/token";
 
     const code = new URLSearchParams(location.search).get("code");
     const verifier = sessionStorage.getItem("pkce_verifier");
 
     if (code && verifier) {
-      const body = new URLSearchParams({
-        grant_type: "authorization_code",
-        client_id: CLIENT_ID,
-        code,
-        redirect_uri: REDIRECT_URI,
-        code_verifier: verifier
-      });
-        console.log("Code:", code);
-        console.log("Verifier:", verifier);
+      console.log("Code:", code);
+      console.log("Verifier:", verifier);
 
-      fetch(TOKEN_URL, {
+      fetch("https://YOUR-VERCEL-APP.vercel.app/api/exchange-token", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString()
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, redirect_uri: REDIRECT_URI, verifier })
       })
-      .then(res => res.json())
-      .then(data => {
-        console.log("Access token:", data.access_token);
-        sessionStorage.setItem("ml_access_token", data.access_token);
-        document.body.insertAdjacentHTML("beforeend", "<p>Token received. You can close this tab.</p>");
-      })
-      .catch(err => {
-        console.error(err);
-        document.body.insertAdjacentHTML("beforeend", `<p>Error: ${err.message}</p>`);
-      });
+        .then(res => res.json())
+        .then(data => {
+          console.log("Access token:", data.access_token);
+          sessionStorage.setItem("ml_access_token", data.access_token);
+          document.body.insertAdjacentHTML("beforeend", "<p>Token received. You can close this tab.</p>");
+        })
+        .catch(err => {
+          console.error(err);
+          document.body.insertAdjacentHTML("beforeend", `<p>Error: ${err.message}</p>`);
+        });
+
     } else {
       document.body.insertAdjacentHTML("beforeend", "<p>Missing code or verifier.</p>");
     }
