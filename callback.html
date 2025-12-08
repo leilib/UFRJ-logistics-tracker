@@ -15,11 +15,12 @@
       console.log("Code:", code);
       console.log("Verifier:", verifier);
 
-      fetch("https://YOUR-VERCEL-APP.vercel.app/api/exchange-token", {
+      fetch("https://ufrj-logistics-tracker84.vercel.app/api/exchange-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, redirect_uri: REDIRECT_URI, verifier })
-      })
+        })
+
         .then(res => res.json())
         .then(data => {
           console.log("Access token:", data.access_token);
