@@ -20,6 +20,8 @@
         redirect_uri: REDIRECT_URI,
         code_verifier: verifier
       });
+        console.log("Code:", code);
+        console.log("Verifier:", verifier);
 
       fetch(TOKEN_URL, {
         method: "POST",
