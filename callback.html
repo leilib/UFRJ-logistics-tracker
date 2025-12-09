@@ -54,11 +54,45 @@
                   throw new Error(user.error ? JSON.stringify(user.error) : "User info request failed");
                 }
                 console.log("User info:", user);
-                document.body.insertAdjacentHTML("beforeend", `<pre>${JSON.stringify(user, null, 2)}</pre>`);
+                document.body.insertAdjacentHTML("beforeend", `<h2>User Info</h2><pre>${JSON.stringify(user, null, 2)}</pre>`);
+
+                // 📦 Fetch shipments linked to the user
+                return fetch("https://api.mercadolibre.com/orders/search?seller=me&order.status=paid", {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+              })
+              .then(async res => {
+                const orders = await res.json();
+                if (!res.ok) {
+                  throw new Error(orders.error ? JSON.stringify(orders.error) : "Orders request failed");
+                }
+                console.log("Orders:", orders);
+
+                // For each order, fetch shipment details
+                if (orders.results && orders.results.length > 0) {
+                  orders.results.forEach(order => {
+                    if (order.shipping && order.shipping.id) {
+                      fetch(`https://api.mercadolibre.com/shipments/${order.shipping.id}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                      })
+                        .then(res => res.json())
+                        .then(shipment => {
+                          console.log("Shipment:", shipment);
+                          document.body.insertAdjacentHTML("beforeend", `<h2>Shipment ${shipment.id}</h2><pre>${JSON.stringify(shipment, null, 2)}</pre>`);
+                        })
+                        .catch(err => {
+                          console.error("Error fetching shipment:", err);
+                          document.body.insertAdjacentHTML("beforeend", `<p>Error fetching shipment: ${err}</p>`);
+                        });
+                    }
+                  });
+                } else {
+                  document.body.insertAdjacentHTML("beforeend", "<p>No active orders found.</p>");
+                }
               })
               .catch(err => {
-                console.error("Error fetching user info:", err);
-                document.body.insertAdjacentHTML("beforeend", `<p>Error fetching user info: ${err}</p>`);
+                console.error("Error fetching user info or shipments:", err);
+                document.body.insertAdjacentHTML("beforeend", `<p>Error fetching user info or shipments: ${err}</p>`);
               });
           }
         })
