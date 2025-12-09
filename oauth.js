@@ -25,12 +25,17 @@ document.getElementById("login").addEventListener("click", async () => {
   const challenge = await sha256(verifier);
   sessionStorage.setItem("pkce_verifier", verifier);
 
+  // ✅ Generate secure state
+  const state = crypto.randomUUID();
+  sessionStorage.setItem("ml_oauth_state", state);
+
   const params = new URLSearchParams({
     response_type: "code",
     client_id: CLIENT_ID,
     redirect_uri: REDIRECT_URI,
     code_challenge: challenge,
-    code_challenge_method: "S256"
+    code_challenge_method: "S256",
+    state // include state in login URL
   });
 
   window.location.href = `${AUTH_URL}?${params.toString()}`;
