@@ -15,7 +15,7 @@
       console.log("Code:", code);
       console.log("Verifier:", verifier);
 
-      fetch("https://ufrj-logistics-tracker84.vercel.app/api/exchange-token", {
+      fetch("https://ufrj-logistics-tracker.vercel.app/api/exchange-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, redirect_uri: REDIRECT_URI, verifier })
