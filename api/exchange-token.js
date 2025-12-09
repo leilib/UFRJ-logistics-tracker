@@ -1,8 +1,8 @@
-res.setHeader("Access-Control-Allow-Origin", "*");
-res.setHeader("Access-Control-Allow-Methods", "POST");
-res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
 export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     body: new URLSearchParams({
       grant_type: "authorization_code",
       client_id: "4602042605636246",
-      client_secret: process.env.CLIENT_SECRET, // set in Vercel dashboard
+      client_secret: process.env.CLIENT_SECRET,
       code,
       redirect_uri,
       code_verifier: verifier
@@ -23,5 +23,10 @@ export default async function handler(req, res) {
   });
 
   const data = await response.json();
+
+  if (!response.ok) {
+    return res.status(response.status).json({ error: data });
+  }
+
   res.status(200).json(data);
 }
