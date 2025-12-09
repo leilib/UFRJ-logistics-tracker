@@ -9,8 +9,17 @@
     const CLIENT_ID = "4602042605636246";
     const REDIRECT_URI = "https://leilib.github.io/UFRJ-logistics-tracker/callback";
 
-    const code = new URLSearchParams(location.search).get("code");
+    const urlParams = new URLSearchParams(location.search);
+    const code = urlParams.get("code");
+    const returnedState = urlParams.get("state");
+    const originalState = sessionStorage.getItem("ml_oauth_state");
     const verifier = sessionStorage.getItem("pkce_verifier");
+
+    // ✅ Validate state to prevent CSRF
+    if (returnedState !== originalState) {
+      document.body.insertAdjacentHTML("beforeend", "<p>State mismatch — possible CSRF attack.</p>");
+      throw new Error("State mismatch");
+    }
 
     if (code && verifier) {
       console.log("Code:", code);
@@ -33,20 +42,23 @@
           sessionStorage.setItem("ml_access_token", data.access_token);
           document.body.insertAdjacentHTML("beforeend", "<p>Token received. You can close this tab.</p>");
 
-          // 🔑 Now use the token to fetch user info
+          // 🔑 Use the token to fetch user info
           const token = sessionStorage.getItem("ml_access_token");
           if (token) {
             fetch("https://api.mercadolibre.com/users/me", {
               headers: { Authorization: `Bearer ${token}` }
             })
-              .then(res => res.json())
-              .then(user => {
+              .then(async res => {
+                const user = await res.json();
+                if (!res.ok) {
+                  throw new Error(user.error ? JSON.stringify(user.error) : "User info request failed");
+                }
                 console.log("User info:", user);
                 document.body.insertAdjacentHTML("beforeend", `<pre>${JSON.stringify(user, null, 2)}</pre>`);
               })
               .catch(err => {
                 console.error("Error fetching user info:", err);
-                document.body.insertAdjacentHTML("beforeend", `<p>Error fetching user info</p>`);
+                document.body.insertAdjacentHTML("beforeend", `<p>Error fetching user info: ${err}</p>`);
               });
           }
         })
