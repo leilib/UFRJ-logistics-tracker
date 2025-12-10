@@ -5,6 +5,8 @@
   <h1>Authorization successful</h1>
   <p>Getting your access token...</p>
 
+  <div id="results"></div>
+
   <script type="module">
     const CLIENT_ID = "4602042605636246";
     const REDIRECT_URI = "https://leilib.github.io/UFRJ-logistics-tracker/callback";
@@ -15,9 +17,15 @@
     const originalState = sessionStorage.getItem("ml_oauth_state");
     const verifier = sessionStorage.getItem("pkce_verifier");
 
-    // ✅ Validate state to prevent CSRF
+    function showResult(title, content, isError=false) {
+      const div = document.getElementById("results");
+      const color = isError ? "red" : "green";
+      div.insertAdjacentHTML("beforeend",
+        `<h2 style="color:${color}">${title}</h2><pre>${typeof content === "string" ? content : JSON.stringify(content, null, 2)}</pre>`);
+    }
+
     if (returnedState !== originalState) {
-      document.body.insertAdjacentHTML("beforeend", "<p>State mismatch — possible CSRF attack.</p>");
+      showResult("State mismatch", "Possible CSRF attack", true);
       throw new Error("State mismatch");
     }
 
@@ -32,77 +40,33 @@
       })
         .then(async res => {
           const data = await res.json();
-          if (!res.ok) {
-            throw new Error(data.error ? JSON.stringify(data.error) : "Token exchange failed");
-          }
+          if (!res.ok) throw new Error(data.error ? JSON.stringify(data.error) : "Token exchange failed");
           return data;
         })
         .then(data => {
           console.log("Access token:", data.access_token);
           sessionStorage.setItem("ml_access_token", data.access_token);
-          document.body.insertAdjacentHTML("beforeend", "<p>Token received. You can close this tab.</p>");
+          showResult("Token", "Token received successfully");
 
           const token = sessionStorage.getItem("ml_access_token");
 
-          // 🔑 Fetch user info independently
+          // 🔑 Fetch user info
           console.log("Fetching user info…");
-          fetch("https://api.mercadolibre.com/users/me", {
-            headers: { Authorization: `Bearer ${token}` }
-          })
+          fetch("https://api.mercadolibre.com/users/me", { headers: { Authorization: `Bearer ${token}` } })
             .then(res => res.json())
             .then(user => {
               console.log("User info:", user);
-              document.body.insertAdjacentHTML("beforeend", `<h2>User Info</h2><pre>${JSON.stringify(user, null, 2)}</pre>`);
+              showResult("User Info", user);
             })
             .catch(err => {
               console.error("User error:", err);
-              document.body.insertAdjacentHTML("beforeend", `<p>User error: ${err}</p>`);
+              showResult("User Info Error", err.toString(), true);
             });
 
-          // 📦 Fetch orders independently
+          // 📦 Fetch orders
           console.log("Fetching orders…");
-          fetch("https://api.mercadolibre.com/orders/search?seller=me&order.status=paid", {
-            headers: { Authorization: `Bearer ${token}` }
-          })
+          fetch("https://api.mercadolibre.com/orders/search?seller=me&order.status=paid", { headers: { Authorization: `Bearer ${token}` } })
             .then(res => res.json())
             .then(orders => {
               console.log("Orders:", orders);
-              document.body.insertAdjacentHTML("beforeend", `<h2>Orders</h2><pre>${JSON.stringify(orders, null, 2)}</pre>`);
-
-              // For each order, fetch shipment independently
-              if (orders.results) {
-                orders.results.forEach(order => {
-                  if (order.shipping && order.shipping.id) {
-                    console.log(`Fetching shipment ${order.shipping.id}…`);
-                    fetch(`https://api.mercadolibre.com/shipments/${order.shipping.id}`, {
-                      headers: { Authorization: `Bearer ${token}` }
-                    })
-                      .then(res => res.json())
-                      .then(shipment => {
-                        console.log("Shipment:", shipment);
-                        document.body.insertAdjacentHTML("beforeend", `<h2>Shipment ${shipment.id}</h2><pre>${JSON.stringify(shipment, null, 2)}</pre>`);
-                      })
-                      .catch(err => {
-                        console.error("Shipment error:", err);
-                        document.body.insertAdjacentHTML("beforeend", `<p>Shipment error: ${err}</p>`);
-                      });
-                  }
-                });
-              }
-            })
-            .catch(err => {
-              console.error("Orders error:", err);
-              document.body.insertAdjacentHTML("beforeend", `<p>Orders error: ${err}</p>`);
-            });
-        })
-        .catch(err => {
-          console.error("Exchange error:", err);
-          document.body.insertAdjacentHTML("beforeend", `<p>Exchange error: ${err}</p>`);
-        });
-
-    } else {
-      document.body.insertAdjacentHTML("beforeend", "<p>Missing code or verifier.</p>");
-    }
-  </script>
-</body>
-</html>
+              showResult("Orders
