@@ -50,68 +50,29 @@
 
           const token = sessionStorage.getItem("ml_access_token");
 
-          // 🔑 Fetch user info
+          // 🔑 User info
           console.log("Fetching user info…");
           fetch("https://api.mercadolibre.com/users/me", { headers: { Authorization: `Bearer ${token}` } })
             .then(res => res.json())
-            .then(user => {
-              console.log("User info:", user);
-              showResult("User Info", user);
-            })
-            .catch(err => {
-              console.error("User error:", err);
-              showResult("User Info Error", err.toString(), true);
-            });
+            .then(user => showResult("User Info", user))
+            .catch(err => showResult("User Info Error", err.toString(), true));
 
-          // 📦 Fetch orders
+          // 📦 Orders
           console.log("Fetching orders…");
           fetch("https://api.mercadolibre.com/orders/search?seller=me&order.status=paid", { headers: { Authorization: `Bearer ${token}` } })
             .then(res => res.json())
-            .then(orders => {
-              console.log("Orders:", orders);
-              showResult("Orders", orders);
+            .then(orders => showResult("Orders", orders))
+            .catch(err => showResult("Orders Error", err.toString(), true));
 
-              if (orders.results) {
-                orders.results.forEach(order => {
-                  if (order.shipping && order.shipping.id) {
-                    console.log(`Fetching shipment ${order.shipping.id}…`);
-                    fetch(`https://api.mercadolibre.com/shipments/${order.shipping.id}`, { headers: { Authorization: `Bearer ${token}` } })
-                      .then(res => res.json())
-                      .then(shipment => {
-                        console.log("Shipment:", shipment);
-                        showResult(`Shipment ${shipment.id}`, shipment);
-                      })
-                      .catch(err => {
-                        console.error("Shipment error:", err);
-                        showResult(`Shipment ${order.shipping.id} Error`, err.toString(), true);
-                      });
-                  }
-                });
-              }
-            })
-            .catch(err => {
-              console.error("Orders error:", err);
-              showResult("Orders Error", err.toString(), true);
-            });
-
-          // 🚚 Standalone test shipment fetch
-          console.log("Fetching test shipment…");
+          // 🚚 Standalone sandbox shipment test
+          console.log("Fetching sandbox shipment…");
           fetch("https://api.mercadolibre.com/shipments/123456789", { headers: { Authorization: `Bearer ${token}` } })
             .then(res => res.json())
-            .then(shipment => {
-              console.log("Test Shipment:", shipment);
-              showResult("Test Shipment", shipment);
-            })
-            .catch(err => {
-              console.error("Test Shipment error:", err);
-              showResult("Test Shipment Error", err.toString(), true);
-            });
+            .then(shipment => showResult("Test Shipment", shipment))
+            .catch(err => showResult("Test Shipment Error", err.toString(), true));
 
         })
-        .catch(err => {
-          console.error("Exchange error:", err);
-          showResult("Exchange Error", err.toString(), true);
-        });
+        .catch(err => showResult("Exchange Error", err.toString(), true));
 
     } else {
       showResult("Error", "Missing code or verifier", true);
